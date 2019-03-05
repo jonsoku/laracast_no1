@@ -1,0 +1,7 @@
+.is-danger{
+    border: 1px solid red;
+}
+.is-completed{
+    text-decoration: line-through;
+    color:#385d7a;
+}

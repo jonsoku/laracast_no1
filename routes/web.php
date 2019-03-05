@@ -15,3 +15,4 @@ Route::get('/', function () {
     return view('welcome');
 });
 Route::resource('projects', 'ProjectsController');
+Route::patch('/tasks/{task}', 'ProjectTasksController@update');

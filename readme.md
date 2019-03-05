@@ -296,6 +296,18 @@
         
                 return redirect('/projects');
             }
+            
+            <after 3>
+            
+            public function store(){
+                $attributes = \request()->validate([
+                    'title' => ['required','min:2'],
+                    'description' => ['required', 'min:2'],
+                ]);
+                Project::create($attributes);
+        
+                return redirect('/projects');
+            }
 
         
         [2] show
@@ -363,6 +375,20 @@
                 return redirect('/projects');
         
             }
+            
+            <after 2>
+            
+            public function update(Project $project){
+        
+                $attributes = \request()->validate([
+                    'title' => ['required','min:2'],
+                    'description' => ['required', 'min:2'],
+                ]);
+                $project->update($attributes);
+        
+                return redirect('/projects');
+        
+            }
         
         [5] destroy
         
@@ -380,3 +406,181 @@
                 $project->delete();
                 return redirect('/projects');
             }
+### [16-1] Task model 생성 (migration, factory 같이)
+    php artisan make:model Task -m -f
+
+### [16-2] Task table 생성 
+    [1]
+    
+    Schema::create('tasks', function (Blueprint $table) {
+        $table->increments('id');
+        $table->unsignedInteger('project_id');
+        $table->string('description');
+        $table->boolean('completed')->default(false);
+        $table->timestamps();
+    });
+    
+    [2]
+    
+    php artisan migrate
+    
+    
+### [16-3] Projects.php <=> Task.php  모델에 관계맺기
+    public function tasks()
+    {
+        return $this->hasMany(Task::class);
+    }
+
+### [16-4] tinker 로 더미데이터 넣기
+    [1]
+    
+    php artisan tinker
+    
+    [2]
+    
+    관계 맺어졌나 확인
+    App\Project::first()->tasks;
+
+    [3]
+    
+    database에 project_id값 넣고 더미데이터 입력
+    App\Project::first()->tasks; 확인
+    
+### [16-5] projects.show 에 task추가
+    @if($project->tasks->count())
+    <div>
+        <h2>Task</h2>
+        @foreach($project->tasks as $task)
+            <p>{{$task->description}}</p>
+        @endforeach
+    </div>
+    @endif
+    
+### [16-6] Task.php <=> Project.php 모델에 관계맺기
+    <?php
+    
+    namespace App;
+    
+    use Illuminate\Database\Eloquent\Model;
+    
+    class Task extends Model
+    {
+        public function project(){
+            return $this->belongsTo(Project::class);
+        }
+    }
+    
+### [16-7] tinker 로 관계 맺어진 것 확인하기
+    [1]
+    php artisan tinker
+    
+    [2]
+    App\Task::first();
+
+    [3]
+    App\Task::first()->project;
+
+### [16-8] projects.show 에 Task부분 수정
+    @if($project->tasks->count())
+    <div>
+        <h2>Task</h2>
+        @foreach($project->tasks as $task)
+            <p>
+                <form method="POST" action="/tasks/{{$task->id}}/">
+                @method('PATCH')
+                @csrf
+                    <label for="completed">
+                        <input type="checkbox" name="completed" onchange="this.form.submit()"/>
+                        {{$task->description}}
+                    </label>
+                </form>
+            </p>
+        @endforeach
+    </div>
+    @endif
+    
+### [16-9] web.php 에 라우트 추가
+    Route::patch('/tasks/{task}', 'ProjectTasksController@update');
+    
+### [17-1] ProjectTasksController 생성
+    [1] 컨트롤러 생성
+    
+    php artisan make:controller ProjectTasksController
+    
+    [2] 확인과정1 
+    
+    <?php
+    
+    namespace App\Http\Controllers;
+    
+    use App\Task;
+    use Illuminate\Http\Request;
+    
+    class ProjectTasksController extends Controller
+    {
+        public function update(Task $task){
+            dd($task);
+        }
+    }
+    
+    * 체크박스를 눌렀을때 잘 가는지 확인과정
+
+    
+    [3] 확인과정2
+    
+    <?php
+    
+    namespace App\Http\Controllers;
+    
+    use App\Task;
+    use Illuminate\Http\Request;
+    
+    class ProjectTasksController extends Controller
+    {
+        public function update(Task $task){
+            dd(request()->all());
+        }
+    }
+
+    * 체크박스를 눌렀을때 잘 가는지 확인과정
+    
+    [4] 실제로직
+    
+    <?php
+    
+    namespace App\Http\Controllers;
+    
+    use App\Task;
+    use Illuminate\Http\Request;
+    
+    class ProjectTasksController extends Controller
+    {
+        public function update(Task $task){
+            $task->update([
+                'completed' => request()->has('completed')
+            ]);
+    
+            return back();
+        }
+    }
+    
+### [17-2] projects.show 부분 수정
+
+    @if($project->tasks->count())
+    <div>
+        <h2>Task</h2>
+        @foreach($project->tasks as $task)
+            <p>
+                <form method="POST" action="/tasks/{{$task->id}}/">
+                @method('PATCH')
+                @csrf
+                    <label for="completed" class="{{$task->completed ? 'is-completed' : ''}}">
+                        <input type="checkbox" name="completed" onchange="this.form.submit()" {{$task->completed ? 'checked' : ''}}/>
+                        {{$task->description}}
+                    </label>
+                </form>
+            </p>
+        @endforeach
+    </div>
+    @endif
+    

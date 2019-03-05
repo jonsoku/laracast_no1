@@ -8,4 +8,8 @@
             </div>
         @endforeach
     </div>
+
+    <div>
+        <button onclick="location.href='/projects/create'">write</button>
+    </div>
 @endsection
