@@ -782,3 +782,124 @@
         @endforeach
     </div>
     @endif
+
+### [22-1] 프로바이더 만들기
+    php artisan make:provider SocialServiceProvider
+### [22-2] 프로바이더 레지스터 설정
+    public function register()
+    {
+        $this->app->singleton(Twitter::class, function(){
+            return new Twitter('api-key');
+        });
+    }
+### [22-3] config/app.php
+    
+ 
+### [26-1] ProjectsController@index
+    
+        public function index(){
+            //$projects = \App\Project::all();
+            $projects = \App\Project::where('owner_id', auth()->id())->get(); //select * from projects where owner_id = 4
+            return view('projects.index',[
+                'projects' => $projects
+            ]);
+        }
+
+### [26-2] migrations/create_projects_table 수정
+
+        Schema::create('projects', function (Blueprint $table) {
+            $table->increments('id');
+            $table->unsignedInteger('owner_id');
+            $table->string('title');
+            $table->text('description');
+            $table->timestamps();
+
+            $table->foreign('owner_id')
+                ->references('id')
+                ->on('users')
+                ->onDelete('cascade');
+        });
+        
+        php artisan migrate:fresh
+        
+### [26-3] Project.php (model) 
+    
+    $fillable = ['owner_id']
+    추가!! 반드시 !!
+
+### [26-4] auth
+    php artisan make:auth
+
+### [26-5] ProjectsController.php
+
+    
+
+    <?php
+    
+    namespace App\Http\Controllers;
+    
+    use App\Project;
+    use App\Services\Twitter;
+    use Illuminate\Http\Request;
+    
+    class ProjectsController extends Controller
+    {
+        public function __construct()
+        {
+            $this->middleware('auth');
+        }
+    
+        public function index(){
+            //$projects = \App\Project::all();
+            $projects = Project::where('owner_id', auth()->id())->get(); //select * from projects where owner_id = 4
+            return view('projects.index',[
+                'projects' => $projects
+            ]);
+        }
+    
+        public function create(){
+            return view('projects.create');
+        }
+    
+        public function store(){
+            $attributes = \request()->validate([
+                'title' => ['required','min:2'],
+                'description' => ['required', 'min:2'],
+            ]);
+    
+            $attributes['owner_id'] = auth()->id();
+            Project::create($attributes);
+    
+            return redirect('/projects');
+        }
+    
+        public function show(Project $project){
+            return view('projects.show',[
+                'project' => $project
+            ]);
+        }
+    
+        public function edit(Project $project){
+    
+            return view('projects.edit', [
+                'project' => $project
+            ]);
+        }
+    
+        public function update(Project $project){
+    
+            $attributes = \request()->validate([
+                'title' => ['required','min:2'],
+                'description' => ['required', 'min:2'],
+            ]);
+            $project->update($attributes);
+    
+            return redirect('/projects');
+    
+        }
+    
+        public function destroy(Project $project){
+            $project->delete();
+            return redirect('/projects');
+        }
+    }

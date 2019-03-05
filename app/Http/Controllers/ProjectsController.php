@@ -3,12 +3,19 @@
 namespace App\Http\Controllers;
 
 use App\Project;
+use App\Services\Twitter;
 use Illuminate\Http\Request;
 
 class ProjectsController extends Controller
 {
+    public function __construct()
+    {
+        $this->middleware('auth');
+    }
+
     public function index(){
-        $projects = \App\Project::all();
+        //$projects = \App\Project::all();
+        $projects = Project::where('owner_id', auth()->id())->get(); //select * from projects where owner_id = 4
         return view('projects.index',[
             'projects' => $projects
         ]);
@@ -23,6 +30,8 @@ class ProjectsController extends Controller
             'title' => ['required','min:2'],
             'description' => ['required', 'min:2'],
         ]);
+
+        $attributes['owner_id'] = auth()->id();
         Project::create($attributes);
 
         return redirect('/projects');
