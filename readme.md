@@ -147,3 +147,19 @@
         $project->save();
         return redirect('/projects');
     }
+
+### [10-1] web.php에 projects resource 라우트 생성
+
+    기존 라우트 삭제 후 아래 라인 추가
+    Route::resource('projects', 'ProjectsController');
+    
+    php artisan route:list 로 확인
+    
+### [10-2] projects 컨트롤러에 show, edit, update, destroy 추가
+    [1] show
+    
+    [2] edit
+    
+    [3] update
+    
+    [4] destroy
