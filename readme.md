@@ -584,3 +584,100 @@
     </div>
     @endif
     
+    
+### [18-1] Task Form 만들기  projects.show 
+    <form action="/projects/{{$project->id}}/tasks" method="POST">
+        @csrf
+        <label for="description">새 할일</label>
+        <div>
+            <input type="text" name="description" placeholder="" />
+        </div>
+        <div>
+            <button type="submit">새 할일 추가</button>
+        </div>
+    </form>
+    
+### [18-2] ProjectTasksController.php 에 store 만들기
+    [1]
+    
+    public function store(Project $project){
+        $task = new Task();
+        $task->description = \request('description');
+        $task->project_id = $project->id;
+        $task->save();
+
+        return back();
+    }
+    
+    ====================================================
+    
+    [2]
+    
+    public function store(Project $project){
+        Task::create([
+            'description' => \request('description'),
+            'project_id' => $project->id,
+        ]);
+    
+        return back();
+    }
+        
+    ====================================================
+    
+    
+### [18-3] ProjectTasksController.php (store)
+
+    [1]
+    
+    public function store(Project $project){
+        $project->addTask(\request('description'));
+        return back();
+    }
+            
+    ====================================================
+    
+    [2]
+    public function store(Project $project){
+        $attributes = \request()->validate([
+            'description' => 'required'
+        ]);
+        $project->addTask($attributes);
+        return back();
+    }
+    
+    
+### [18-4] Project.php : model
+
+    [1]
+    
+    public function addTask($description){
+
+        return Task::create([
+            'description' => \request('description'),
+            'project_id' => $this->id,
+        ]);
+    }
+                
+    ====================================================
+    
+    [2]
+    
+    public function addTask($task){
+
+        $this->tasks()->create($task);
+    }
+       
+### [18-5] projects.show task 부분 수정
+    <form action="/projects/{{$project->id}}/tasks" method="POST">
+        @csrf
+        <label for="description">새 할일</label>
+        <div>
+            <input type="text" name="description" placeholder="" class="{{$errors->has('description') ? 'is-danger' : ''}}"/>
+        </div>
+        <div>
+            <button type="submit">새 할일 추가</button>
+        </div>
+    </form>
+    @include('errors.error')
+    
+ 

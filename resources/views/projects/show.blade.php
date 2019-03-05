@@ -28,4 +28,16 @@
     </div>
     @endif
 
+    <form action="/projects/{{$project->id}}/tasks" method="POST">
+        @csrf
+        <label for="description">새 할일</label>
+        <div>
+            <input type="text" name="description" placeholder="" class="{{$errors->has('description') ? 'is-danger' : ''}}"/>
+        </div>
+        <div>
+            <button type="submit">새 할일 추가</button>
+        </div>
+    </form>
+    @include('errors.error')
+
 @endsection
