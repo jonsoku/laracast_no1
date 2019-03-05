@@ -105,8 +105,7 @@
         <div>
             @foreach($projects as $project)
                 <div style="background-color: #ffd900;">
-                    <h3>{{$project->title}}</h3>
-                    <h6>{{$project->description}}</h6>
+                    <a href="/projects/{{$project->id}}" style="text-decoration: none; color:black;"><h3>{{$project->title}}</h3></a>
                 </div>
             @endforeach
         </div>
@@ -118,7 +117,7 @@
 ### [9-2] view 페이지 생성 projects.create
           views/projects 폴더에 create.blade.php 생성
     
-### [9-3] view에서 폼 만들기
+### [9-3] view에서 폼 만들기 (projects.create)
     @extends('layout.layout')
     @section('content')
         <h2>Projects.create 화면입니다.</h2>
@@ -155,11 +154,92 @@
     
     php artisan route:list 로 확인
     
-### [10-2] projects 컨트롤러에 show, edit, update, destroy 추가
+### [10-2] projects 컨트롤러에 show, edit, update, destroy 추가 (구린방법)
     [1] show
+    
+        public function show($id){
+            $project = Project::find($id);
+            return view('projects.show',[
+                'project' => $project
+            ]);
+        }
+        
+        ==view====view====view====view====view====view====view====view==
+        
+        @extends('layout.layout')
+        @section('content')
+            <h2>Projects.show 화면입니다.</h2>
+            <div>
+                <h2>title</h2>
+                <p>{{$project->title}}</p>
+                <h4>description</h4>
+                <p>{{$project->description}}</p>
+            </div>
+            <div>
+                <a href="/projects/{{$project->id}}/edit">EDIT</a>
+            </div>
+        @endsection
+
     
     [2] edit
     
+    
+        public function edit($id){
+    
+            $project = Project::find($id);
+            return view('projects.edit', [
+                'project' => $project
+            ]);
+        }
+        
+        ==view====view====view====view====view====view====view====view==
+        
+        @extends('layout.layout')
+        @section('content')
+            <h2>Projects.edit 화면입니다.</h2>
+            <form method="POST" action="/projects/{{$project->id}}">
+                @method('PATCH')
+                @csrf
+                <div>
+                    <input type="text" name="title" placeholder="title" value="{{$project->title}}"/>
+                </div>
+                <div>
+                    <textarea name="description" id="" cols="30" rows="10">{{$project->description}}</textarea>
+                </div>
+                <div>
+                    <button type="submit">update project</button>
+                </div>
+            </form>
+            <form method="POST" action="/projects/{{$project->id}}">
+                @method('DELETE')
+                @csrf
+                <div>
+                    <button type="submit">delete project</button>
+                </div>
+            </form>
+            <button onclick="location.href='/projects'">HOME</button>
+        @endsection
+        
+        
     [3] update
     
+    
+        public function update($id){
+            $project = Project::find($id);
+            $project->title = \request('title');
+            $project->description = \request('description');
+            $project->save();
+            return redirect('/projects');
+    
+        }
+    
     [4] destroy
+    
+    
+        public function destroy($id){
+            $project = Project::find($id);
+            $project->delete();
+            return redirect('/projects');
+        }
+
+### 

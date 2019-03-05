@@ -4,8 +4,7 @@
     <div>
         @foreach($projects as $project)
             <div style="background-color: #ffd900;">
-                <h3>{{$project->title}}</h3>
-                <h6>{{$project->description}}</h6>
+                <a href="/projects/{{$project->id}}" style="text-decoration: none; color:black;"><h3>{{$project->title}}</h3></a>
             </div>
         @endforeach
     </div>
