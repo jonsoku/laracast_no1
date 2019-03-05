@@ -242,4 +242,141 @@
             return redirect('/projects');
         }
 
-### 
+### [14-1] 더 예쁜 컨트롤러
+
+
+        [1] store
+        
+            <before>
+            
+            public function store(){
+            
+                $project = new Project();
+                $project->title = \request('title');
+                $project->description = \request('description');
+                $project->save();
+
+                return redirect('/projects');
+            }
+            
+            <after>
+            
+            public function store(){
+            
+                Project::create([
+                    'title' => \request('title'),
+                    'description' => \request('description')
+                ]);
+            
+                return redirect('/projects');
+            }
+            
+            Project.php 모델에 $fillable 반드시 추가해줘야한다.
+            
+            <?php
+            
+            namespace App;
+            
+            use Illuminate\Database\Eloquent\Model;
+            
+            class Project extends Model
+            {
+                protected $fillable = [
+                    'title', 'description'
+                ];
+            }
+            
+            * protected $guarded = []; 방법도 있다.
+            
+            <after 2>
+            
+            public function store(){
+        
+                Project::create(\request(['title', 'description']));
+        
+                return redirect('/projects');
+            }
+
+        
+        [2] show
+        
+            <before>
+        
+            public function show($id){
+                $project = Project::find($id);
+                return view('projects.show',[
+                    'project' => $project
+                ]);
+            }
+            
+            <after>
+            
+            public function show(Project $project){
+                return view('projects.show',[
+                    'project' => $project
+                ]);
+            }
+
+        
+        [3] edit
+            
+            <before>
+            
+            public function edit($id){
+        
+                $project = Project::find($id);
+                return view('projects.edit', [
+                    'project' => $project
+                ]);
+            }
+            
+            <after>
+            
+            public function edit(Project $project){
+        
+                return view('projects.edit', [
+                    'project' => $project
+                ]);
+            }
+            
+            
+            
+        [4] update
+        
+            <before>
+            
+            public function update($id){
+                $project = Project::find($id);
+                $project->title = \request('title');
+                $project->description = \request('description');
+                $project->save();
+                return redirect('/projects');
+        
+            }
+            
+            <after>
+            
+            public function update(Project $project){
+        
+                $project->update(\request(['title', 'description']));
+        
+                return redirect('/projects');
+        
+            }
+        
+        [5] destroy
+        
+            <before>
+            
+            public function destroy($id){
+                $project = Project::find($id);
+                $project->delete();
+                return redirect('/projects');
+            }
+            
+            <after>
+            
+            public function destroy(Project $project){
+                $project->delete();
+                return redirect('/projects');
+            }
