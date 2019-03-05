@@ -733,3 +733,52 @@
 
         return back();
     }
+    
+### [20-1] CompletedTasksController.php 만들기
+    php artisan make:controller CompletedTasksController
+    
+### [20-2] CompletedTasksController.php
+    <?php
+    
+    namespace App\Http\Controllers;
+    
+    use App\Task;
+    use Illuminate\Http\Request;
+    
+    class CompletedTasksController extends Controller
+    {
+        public function store(Task $task)
+        {
+            $task->complete();
+            return back();
+        }
+        public function destroy(Taks $task)
+        {
+            $task->incomplete();
+            return back();
+        }
+    }
+### [20-3] Route에 추가하기
+    Route::post('/completed-tasks/{task}', 'CompletedTasksController@store');
+    Route::delete('/completed-tasks/{task}', 'CompletedTasksController@destroy');
+    
+### [20-4] projects.show 수정
+    @if($project->tasks->count())
+    <div>
+        <h2>Task</h2>
+        @foreach($project->tasks as $task)
+            <p>
+                <form method="POST" action="/completed-tasks/{{$task->id}}/">
+                @if($task->completed)
+                    @method('DELETE')
+                @endif
+                @csrf
+                    <label for="completed" class="{{$task->completed ? 'is-completed' : ''}}">
+                        <input type="checkbox" name="completed" onchange="this.form.submit()" {{$task->completed ? 'checked' : ''}}/>
+                        {{$task->description}}
+                    </label>
+                </form>
+            </p>
+        @endforeach
+    </div>
+    @endif
