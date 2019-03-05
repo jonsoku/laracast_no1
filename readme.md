@@ -1,4 +1,4 @@
-###Laravel 5.7버전 설치
+### Laravel 5.7버전 설치
     composer create-project --prefer-dist laravel/laravel blog "5.7.*"
 
 ### [6-1] .env 설정
@@ -85,7 +85,7 @@
     public function index(){
         return view('projects.index');
     }
-### [7-6] view 페이지 생성
+### [7-6] view 페이지 생성 projects.index
     views/projects 폴더에 index.blade.php 생성
     
     
@@ -102,12 +102,48 @@
     @extends('layout.layout')
     @section('content')
         <h2>Projects.index 화면입니다.</h2>
-        <ul>
+        <div>
             @foreach($projects as $project)
-                <li>{{$project->title}}</li>
-                <li>{{$project->description}}</li>
+                <div style="background-color: #ffd900;">
+                    <h3>{{$project->title}}</h3>
+                    <h6>{{$project->description}}</h6>
+                </div>
             @endforeach
-        </ul>
+        </div>
     @endsection
-###
+### [9-1] projects 컨트롤러에 create 생성
+    public function create(){
+        return view('projects.create');
+    }
+### [9-2] view 페이지 생성 projects.create
+          views/projects 폴더에 create.blade.php 생성
     
+### [9-3] view에서 폼 만들기
+    @extends('layout.layout')
+    @section('content')
+        <h2>Projects.create 화면입니다.</h2>
+        <form method="POST" action="/projects">
+            @csrf
+            <div>
+                <input type="text" name="title" placeholder="title" />
+            </div>
+            <div>
+                <textarea name="description" id="" cols="30" rows="10"></textarea>
+            </div>
+            <div>
+                <button type="submit">submit project</button>
+            </div>
+        </form>
+    @endsection
+### [9-4] web.php 에 post ProjectsController@store 추가
+    [1] post라우트 추가
+    Route::post('/projects', 'ProjectsController@store');
+    
+    [2] ProjectsController 에 store 생성
+    public function store(){
+        $project = new Project();
+        $project->title = \request('title');
+        $project->description = \request('description');
+        $project->save();
+        return redirect('/projects');
+    }
