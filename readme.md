@@ -680,4 +680,56 @@
     </form>
     @include('errors.error')
     
- 
+    
+### [19-1] ProjectTasksController.php
+    public function update(Task $task){
+        $task->complete(\request()->has('completed'));
+        return back();
+    }
+    
+### [19-2] Task.php
+    <?php
+    
+    namespace App;
+    
+    use Illuminate\Database\Eloquent\Model;
+    
+    class Task extends Model
+    {
+        protected $guarded = [];
+    
+        public function complete($completed = true){
+            $this->update(['completed' => $completed]);
+        }
+    
+        public function incomplete(){
+            $this->update(['completed' => false]);
+        }
+        public function project(){
+            return $this->belongsTo(Project::class);
+        }
+    
+    
+    }
+
+    
+### [19-3] ProjectTasksController.php
+    [1]
+    
+    public function update(Task $task){
+        if(request()->has('completed')){
+            $task->complete();
+        }else{
+            $task->incomplete();
+        }
+        return back();
+    }
+    
+    [2]
+    
+    public function update(Task $task){
+        $completeCheck = \request()->has('completed') ? 'complete' : 'incomplete';
+        $task->$completeCheck();
+
+        return back();
+    }
