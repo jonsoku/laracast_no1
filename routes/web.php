@@ -12,7 +12,6 @@
 */
 
 Route::get('/', function (\App\Services\Twitter $twitter) {
-    dd($twitter);
     return view('welcome');
 });
 Route::resource('projects', 'ProjectsController');
@@ -23,3 +22,7 @@ Route::delete('/completed-tasks/{task}', 'CompletedTasksController@destroy');
 Auth::routes();
 
 Route::get('/home', 'HomeController@index')->name('home');
+
+
+Route::get('login/facebook', 'SocialAuthFacebookController@redirect');
+Route::get('/callback', 'SocialAuthFacebookController@callback');

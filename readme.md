@@ -903,3 +903,317 @@
             return redirect('/projects');
         }
     }
+
+# FACEBOOK LOGIN
+
+### Facebook Login #1
+    composer create-project laravel/laravel socialLogin --prefer-dist
+### Facebook Login #2
+    php artisan serve
+    php artisan migrate
+    php artisan make:auth
+    
+### Facebook Login #3
+    sudo composer require laravel/socialite
+    
+    
+    
+### config/app.php
+    <providers>
+
+    'providers' => [
+        // Other service providers...
+    
+        Laravel\Socialite\SocialiteServiceProvider::class,
+    ],
+
+    
+    <alias>
+    
+    'Sociallite' => Laravel\Socialite\Facades\Socialite::class,
+    
+### facebook　개발자 모드
+    https://developers.facebook.com/ 
+
+
+### config/services.php
+    <?php
+    
+    // services.php
+    
+    'facebook' => [
+        'client_id' => env('CLIENT_ID'),
+        'client_secret' => env('CLIENT_SECRET'),
+        'redirect' => 'http://localhost:8000/callback',
+    ],
+    
+    .env file
+    
+    CLIENT_ID=
+    CLIENT_SECRET=
+
+
+### Facebook Login #4
+
+    php artisan make:controller SocialAuthFacebookController
+    
+### SocialAuthFacebookController
+    <?php
+    
+    
+    namespace App\Http\Controllers;
+    
+    use Illuminate\Http\Request;
+    use Socialite;
+    
+    class SocialAuthFacebookController extends Controller
+    {
+        /**
+         * Create a redirect method to facebook api.
+         *
+         * @return void
+         */
+        public function redirect()
+        {
+            return Socialite::driver('facebook')->redirect();
+        }
+    
+        /**
+         * Return a callback method from facebook api.
+         *
+         * @return callback URL from facebook
+         */
+        public function callback()
+        {
+    
+        }
+    }
+
+
+### auth.login view 페이지 추가
+     @extends('layouts.app')
+     
+     @section('content')
+     <div class="container">
+         <div class="row">
+             <div class="col-md-8 col-md-offset-2">
+                 <div class="panel panel-default">
+                     <div class="panel-heading">Login</div>
+                     <div class="panel-body">
+                         <form class="form-horizontal" method="POST" action="{{ route('login') }}">
+                             {{ csrf_field() }}
+     
+                             <div class="form-group{{ $errors->has('email') ? ' has-error' : '' }}">
+                                 <label for="email" class="col-md-4 control-label">E-Mail Address</label>
+     
+                                 <div class="col-md-6">
+                                     <input id="email" type="email" class="form-control" name="email" value="{{ old('email') }}" required autofocus>
+     
+                                     @if ($errors->has('email'))
+                                         <span class="help-block">
+                                             <strong>{{ $errors->first('email') }}</strong>
+                                         </span>
+                                     @endif
+                                 </div>
+                             </div>
+     
+                             <div class="form-group{{ $errors->has('password') ? ' has-error' : '' }}">
+                                 <label for="password" class="col-md-4 control-label">Password</label>
+     
+                                 <div class="col-md-6">
+                                     <input id="password" type="password" class="form-control" name="password" required>
+     
+                                     @if ($errors->has('password'))
+                                         <span class="help-block">
+                                             <strong>{{ $errors->first('password') }}</strong>
+                                         </span>
+                                     @endif
+                                 </div>
+                             </div>
+     
+                             <div class="form-group">
+                                 <div class="col-md-6 col-md-offset-4">
+                                     <div class="checkbox">
+                                         <label>
+                                             <input type="checkbox" name="remember" {{ old('remember') ? 'checked' : '' }}> Remember Me
+                                         </label>
+                                     </div>
+                                 </div>
+                             </div>
+     
+                             <div class="form-group">
+                                 <div class="col-md-8 col-md-offset-4">
+                                     <button type="submit" class="btn btn-primary">
+                                         Login
+                                     </button>
+     
+                                     <a class="btn btn-link" href="{{ route('password.request') }}">
+                                         Forgot Your Password?
+                                     </a>
+                                 </div>
+                             </div>
+                             <br />
+                             <p style="margin-left:265px">OR</p>
+                             <br />
+                             <div class="form-group">
+                                 <div class="col-md-8 col-md-offset-4">
+                                   <a href="/login/facebook" class="btn btn-primary">Login with Facebook</a>
+                                 </div>
+                             </div>
+                         </form>
+                     </div>
+                 </div>
+             </div>
+         </div>
+     </div>
+     @endsection
+
+### Facebook Login #5
+
+    php artisan make:model SocialFacebookAccount -m
+
+### migration file
+     <?php
+    
+     // create_social_facebook_accounts.php
+    
+     use Illuminate\Support\Facades\Schema;
+     use Illuminate\Database\Schema\Blueprint;
+     use Illuminate\Database\Migrations\Migration;
+    
+     class CreateSocialFacebookAccountsTable extends Migration
+     {
+        /**
+         * Run the migrations.
+         *
+         * @return void
+         */
+        public function up()
+        {
+            Schema::create('social_facebook_accounts', function (Blueprint $table) {
+              $table->integer('user_id');
+              $table->string('provider_user_id');
+              $table->string('provider');
+              $table->timestamps();
+            });
+        }
+    
+        /**
+         * Reverse the migrations.
+         *
+         * @return void
+         */
+        public function down()
+        {
+            Schema::dropIfExists('social_facebook_accounts');
+        }
+     }
+
+### Facebook Login #6
+    php artisan migrate:refresh
+
+### Facebook Login #7
+
+    <?php
+    
+    // SocialFacebookAccount.php
+    
+    namespace App;
+    
+    use Illuminate\Database\Eloquent\Model;
+    
+    class SocialFacebookAccount extends Model
+    {
+      protected $fillable = ['user_id', 'provider_user_id', 'provider'];
+    
+      public function user()
+      {
+          return $this->belongsTo(User::class);
+      }
+    }
+
+### Services/SocialFacebookAccountService.php 생성
+    <?php
+    
+    namespace App\Services;
+    use App\SocialFacebookAccount;
+    use App\User;
+    use Laravel\Socialite\Contracts\User as ProviderUser;
+    
+    class SocialFacebookAccountService
+    {
+        public function createOrGetUser(ProviderUser $providerUser)
+        {
+            $account = SocialFacebookAccount::whereProvider('facebook')
+                ->whereProviderUserId($providerUser->getId())
+                ->first();
+    
+            if ($account) {
+                return $account->user;
+            } else {
+    
+                $account = new SocialFacebookAccount([
+                    'provider_user_id' => $providerUser->getId(),
+                    'provider' => 'facebook'
+                ]);
+    
+                $user = User::whereEmail($providerUser->getEmail())->first();
+    
+                if (!$user) {
+    
+                    $user = User::create([
+                        'email' => $providerUser->getEmail(),
+                        'name' => $providerUser->getName(),
+                        'password' => md5(rand(1,10000)),
+                    ]);
+                }
+    
+                $account->user()->associate($user);
+                $account->save();
+    
+                return $user;
+            }
+        }
+    }
+    
+### SocialAuthFacebookController.php 콜백함수 업데이트
+    <?php
+    
+    // SocialAuthFacebookController.php
+    
+    namespace App\Http\Controllers;
+    
+    use Illuminate\Http\Request;
+    use Socialite;
+    use App\Services\SocialFacebookAccountService;
+    
+    class SocialAuthFacebookController extends Controller
+    {
+      /**
+       * Create a redirect method to facebook api.
+       *
+       * @return void
+       */
+        public function redirect()
+        {
+            return Socialite::driver('facebook')->redirect();
+        }
+    
+        /**
+         * Return a callback method from facebook api.
+         *
+         * @return callback URL from facebook
+         */
+        public function callback(SocialFacebookAccountService $service)
+        {
+            $user = $service->createOrGetUser(Socialite::driver('facebook')->user());
+            auth()->login($user);
+            return redirect()->to('/home');
+        }
+    }
+
+### Facebook Login #8 web.php 라우트 추가
+    
+    Route::get('login/facebook', 'SocialAuthFacebookController@redirect');
+    Route::get('/callback', 'SocialAuthFacebookController@callback');
+
